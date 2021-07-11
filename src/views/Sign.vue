@@ -2,9 +2,9 @@
   <v-container>
     <v-row style="height: 100vh" align="center">
       <v-spacer></v-spacer>
-      <v-col cols="3">
-        <v-form ref="form" @submit.prevent="sign(str)">
-          <v-card class="pa-8">
+      <v-col cols="12" sm="8" md="6" lg="4" xl="3">
+        <v-form ref="form" @submit.prevent="isLogin ? login() : signUpRoutine()">
+          <v-card elevation="12" class="pa-8">
             <v-card-title class="justify-center">{{ str }}</v-card-title>
             <v-card-text>
               <v-text-field
@@ -35,15 +35,12 @@
               class="d-flex justify-center flex-column align-center text-center"
               style="width: 100%"
             >
-              <v-btn color="primary" class="button" type="submit">{{
-                str
-              }}</v-btn>
+              <v-btn color="primary" class="button" type="submit">{{ str }}</v-btn>
               <v-btn
                 color="secondary"
                 class="button"
-                @click="$store.state.uid ? linkWithGoogle() : signWithGoogle()"
-                >{{ str }} with Google
-                <v-icon class="ml-2">mdi-google</v-icon></v-btn
+                @click="$store.getters.uid ? linkWithGoogle() : signWithGoogle()"
+                >{{ str }} with Google <v-icon class="ml-2">mdi-google</v-icon></v-btn
               >
               <v-btn
                 text
@@ -76,21 +73,14 @@ export default Vue.extend({
   data: () => ({
     show1: false,
     show2: false,
-    email: '',
-    password: '',
     passwordRepeat: '',
     rules: {
       isEmpty: (v: string) => !!v || 'This field is required',
       isLongEnough: (v: string) =>
-        v.length > 8
-          ? true
-          : 'The password is required to be at least 8 characters',
+        v.length >= 8 ? true : 'The password is required to be at least 8 characters',
       isTheSame: (v: string) =>
-        v === password
-          ? true
-          : 'Please make sure that the passwords are the same',
-      isEmail: (v: string) =>
-        v.includes('@') || 'Make sure to enter valid email',
+        v === password ? true : 'Please make sure that the passwords are the same',
+      isEmail: (v: string) => v.includes('@') || 'Make sure to enter valid email',
     },
   }),
   watch: {
@@ -100,6 +90,22 @@ export default Vue.extend({
     str() {
       return this.isLogin ? 'Login' : 'Sign Up'
     },
+    email: {
+      get() {
+        return this.$store.state.email
+      },
+      set(v) {
+        this.$store.commit('setEmail', v)
+      },
+    },
+    password: {
+      get() {
+        return this.$store.state.password
+      },
+      set(v) {
+        this.$store.commit('setPassword', v)
+      },
+    },
   },
   props: {
     isLogin: {
@@ -108,24 +114,24 @@ export default Vue.extend({
     },
   },
   methods: {
-    sign(type: 'Login' | 'Sign Up') {
-      if ((this.$refs.form as any).validate()) {
-        if (!this.$store.getters.uid) {
-          firebase
-            .auth()
-            [
-              type === 'Login'
-                ? 'signInWithEmailAndPassword'
-                : 'createUserWithEmailAndPassword'
-            ](this.email, this.password)
-        } else {
-          this.link()
-        }
-      }
+    async signUpRoutine() {
+      await this.signUp()
+      this.$router.push('/complete')
     },
-    signWithGoogle() {
-      firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider())
+    async login() {
+      if (!(this.$refs.form as any).validate()) return
+      if (!this.$store.getters.uid) {
+        await firebase.auth().signInWithEmailAndPassword(this.email, this.password)
+        this.$router.push('/')
+      } else this.link()
     },
+    async signUp() {
+      if (!(this.$refs.form as any).validate()) return
+      await firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
+      this.$router.push('/complete')
+    },
+    signWithGoogle: () =>
+      firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()),
     linkWithGoogle() {
       ;(this.$store.state.user as firebase.User).linkWithRedirect(
         new firebase.auth.GoogleAuthProvider()
@@ -136,6 +142,8 @@ export default Vue.extend({
         firebase.auth.EmailAuthProvider.credential(this.email, this.password)
       )
     },
+    // If i delete this line of code typescript goes crazy...
+    sign(t: '') {},
   },
 })
 </script>

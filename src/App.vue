@@ -13,16 +13,21 @@ import Vue from 'vue'
 
 export default Vue.extend({
   created() {
-    firebase.auth().onAuthStateChanged(user => this.setUser(user))
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) {
+        this.setUser(false)
+        this.$router.push('/login')
+      } else this.setUser(user)
+    })
     firebase
       .auth()
       .getRedirectResult()
-      .then(user => {
+      .then((user) => {
         if (!user.user) return
         this.$store.commit('setUser', user)
         this.$router.push('/')
       })
   },
-  methods: { ...mapMutations(['setUser']) }
+  methods: { ...mapMutations(['setUser']) },
 })
 </script>

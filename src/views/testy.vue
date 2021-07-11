@@ -1,24 +1,9 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-spacer></v-spacer>
-      <v-col cols="4">
-        <v-card elevation="12">
-          <v-window vertical v-model="current">
-            <v-window-item v-for="n in lng" :key="n">
-              <v-card-title class="text-h1 justify-center"
-                >Slide {{ n }}</v-card-title
-              >
-            </v-window-item>
-          </v-window>
-          <v-card-actions>
-            <v-btn @click="prev">Prev</v-btn>
-            <v-btn @click="next">Next</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-      <v-spacer></v-spacer>
-    </v-row>
+  <v-container
+    class="d-flex justify-center align-center text-center"
+    style="height:100vh;width:100vw;"
+  >
+    <v-progress-circular indeterminate color="secondary"></v-progress-circular>
   </v-container>
 </template>
 
